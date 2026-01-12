@@ -22,6 +22,9 @@ class CropPredictor:
         crop_labels: List of crop names
     """
     
+    # Expected feature order for consistent predictions
+    FEATURE_KEYS = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+    
     def __init__(self):
         self.model = None
         self.scaler = StandardScaler()
@@ -136,11 +139,11 @@ class CropPredictor:
         # Convert to array if dictionary
         if isinstance(climate_data, dict):
             # Use explicit key order to ensure consistency
-            expected_keys = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
             try:
-                climate_data = np.array([climate_data[key] for key in expected_keys]).reshape(1, -1)
+                climate_data = np.array([climate_data[key] for key in self.FEATURE_KEYS]).reshape(1, -1)
             except KeyError as e:
                 print(f"Error: Missing required key {e} in climate_data")
+                print(f"Expected keys: {self.FEATURE_KEYS}")
                 return None
         else:
             climate_data = np.array(climate_data).reshape(1, -1)
