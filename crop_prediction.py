@@ -59,6 +59,11 @@ class CropPredictor:
         if data is None:
             return None, None, None, None
         
+        # Validate target column exists
+        if target_column not in data.columns:
+            print(f"Error: Target column '{target_column}' not found in data")
+            return None, None, None, None
+        
         # Separate features and target
         X = data.drop(target_column, axis=1)
         y = data[target_column]
@@ -119,6 +124,7 @@ class CropPredictor:
         
         Args:
             climate_data: Dictionary or array of climate parameters
+                         If dict, expected keys: N, P, K, temperature, humidity, ph, rainfall
             
         Returns:
             Predicted crop name
@@ -129,7 +135,13 @@ class CropPredictor:
         
         # Convert to array if dictionary
         if isinstance(climate_data, dict):
-            climate_data = np.array(list(climate_data.values())).reshape(1, -1)
+            # Use explicit key order to ensure consistency
+            expected_keys = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+            try:
+                climate_data = np.array([climate_data[key] for key in expected_keys]).reshape(1, -1)
+            except KeyError as e:
+                print(f"Error: Missing required key {e} in climate_data")
+                return None
         else:
             climate_data = np.array(climate_data).reshape(1, -1)
         

@@ -26,15 +26,27 @@ def example_prediction():
         scenarios = [
             {
                 'name': 'High Rainfall, Moderate Temperature',
-                'data': [90, 42, 43, 20.87, 82.00, 6.50, 202.93]
+                'data': {
+                    'N': 90, 'P': 42, 'K': 43,
+                    'temperature': 20.87, 'humidity': 82.00,
+                    'ph': 6.50, 'rainfall': 202.93
+                }
             },
             {
                 'name': 'Low Rainfall, High Temperature',
-                'data': [40, 60, 50, 30.5, 65.0, 7.2, 85.0]
+                'data': {
+                    'N': 40, 'P': 60, 'K': 50,
+                    'temperature': 30.5, 'humidity': 65.0,
+                    'ph': 7.2, 'rainfall': 85.0
+                }
             },
             {
                 'name': 'Moderate Conditions',
-                'data': [70, 50, 45, 25.0, 75.0, 6.8, 150.0]
+                'data': {
+                    'N': 70, 'P': 50, 'K': 45,
+                    'temperature': 25.0, 'humidity': 75.0,
+                    'ph': 6.8, 'rainfall': 150.0
+                }
             }
         ]
         
@@ -42,11 +54,12 @@ def example_prediction():
         
         for scenario in scenarios:
             predicted_crop = predictor.predict_crop(scenario['data'])
+            data = scenario['data']
             print(f"Scenario: {scenario['name']}")
-            print(f"  Climate Data: N={scenario['data'][0]}, P={scenario['data'][1]}, "
-                  f"K={scenario['data'][2]}, Temp={scenario['data'][3]}°C, "
-                  f"Humidity={scenario['data'][4]}%, pH={scenario['data'][5]}, "
-                  f"Rainfall={scenario['data'][6]}mm")
+            print(f"  Climate Data: N={data['N']}, P={data['P']}, "
+                  f"K={data['K']}, Temp={data['temperature']}°C, "
+                  f"Humidity={data['humidity']}%, pH={data['ph']}, "
+                  f"Rainfall={data['rainfall']}mm")
             print(f"  ✓ Recommended Crop: {predicted_crop}")
             print()
         
