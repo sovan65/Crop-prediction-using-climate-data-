@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌾 Crop Recommendation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s ease;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.6s ease;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        button.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            animation: slideUp 0.5s ease;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .prediction-box {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .crop-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .confidence {
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .confidence-bar {
+            width: 200px;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: #4ade80;
+            transition: width 0.5s ease;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            border: 2px solid #c33;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .crops-list, .features-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .crop-item, .feature-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            font-size: 0.95em;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #999;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            width: auto;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.healthy {
+            background: #4ade80;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .system-status {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .system-status h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #4ade80;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .status-badge.error {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🌾 Crop Recommendation System</h1>
+            <p>AI-Powered Crop Prediction Based on Soil & Climate Data</p>
+        </header>
+
+        <!-- System Status -->
+        <div class="system-status">
+            <h3><span class="status-indicator healthy"></span>System Status</h3>
+            <div id="status-text">Checking system health...</div>
+            <div id="status-badge" class="status-badge"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Prediction Section -->
+            <div class="card">
+                <h2>🎯 Make Prediction</h2>
+                
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('single')">Single</button>
+                    <button class="tab-button" onclick="switchTab('batch')">Batch</button>
+                </div>
+
+                <!-- Single Prediction -->
+                <div id="single" class="tab-content active">
+                    <div class="info-box">
+                        💡 Enter soil nutrients and climate conditions to get crop recommendations
+                    </div>
+
+                    <div class="form-group">
+                        <label>Soil Nutrients</label>
+                        <div class="input-row">
+                            <div>
+                                <label style="font-size: 0.85em;">Nitrogen (N) kg/ha</label>
+                                <input type="number" id="n_input" placeholder="0-140" min="0" max="140" value="90">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.85em;">Phosphorus (P) kg/ha</label>
+                                <input type="number" id="p_input" placeholder="0-145" min="0" max="145" value="42">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-size: 0.85em;">Potassium (K) kg/ha</label>
+                        <input type="number" id="k_input" placeholder="0-205" min="0" max="205" value="43">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Climate Conditions</label>
+                        <div class="input-row">
+                            <div>
+                                <label style="font-size: 0.85em;">Temperature (°C)</label>
+                                <input type="number" id="temp_input" placeholder="10-40" min="10" max="40" step="0.1" value="20.88">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.85em;">Humidity (%)</label>
+                                <input type="number" id="humidity_input" placeholder="0-100" min="0" max="100" step="0.1" value="82">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-row">
+                            <div>
+                                <label style="font-size: 0.85em;">pH Level</label>
+                                <input type="number" id="ph_input" placeholder="0-14" min="0" max="14" step="0.1" value="6.5">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.85em;">Rainfall (mm)</label>
+                                <input type="number" id="rainfall_input" placeholder="0-300" min="0" max="300" step="0.1" value="202.94">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="makePrediction()">🚀 Get Prediction</button>
+                    <button class="secondary" onclick="loadExampleData()">📋 Load Example</button>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Analyzing conditions...</p>
+                    </div>
+
+                    <div class="result" id="result">
+                        <h3>Recommended Crop</h3>
+                        <div class="prediction-box">
+                            <div class="crop-name" id="crop-result">-</div>
+                            <div class="confidence">
+                                <span>Confidence:</span>
+                                <span id="confidence-text">0%</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="confidence-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="error" id="error"></div>
+                </div>
+
+                <!-- Batch Prediction -->
+                <div id="batch" class="tab-content">
+                    <div class="info-box">
+                        📊 Analyze multiple conditions at once
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sample Data (JSON Format)</label>
+                        <textarea id="batch_input" style="width: 100%; height: 150px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: monospace; font-size: 0.9em;" placeholder='[
+  {"N": 90, "P": 42, "K": 43, "temperature": 20.88, "humidity": 82, "ph": 6.5, "rainfall": 202.94},
+  {"N": 50, "P": 80, "K": 60, "temperature": 25, "humidity": 70, "ph": 7.0, "rainfall": 100}
+]'></textarea>
+                    </div>
+
+                    <button onclick="makeBatchPrediction()">🔄 Batch Predict</button>
+                    <button class="secondary" onclick="loadBatchExample()">📋 Load Example</button>
+
+                    <div class="loading" id="batch-loading">
+                        <div class="spinner"></div>
+                        <p>Processing batch...</p>
+                    </div>
+
+                    <div class="result" id="batch-result">
+                        <h3>Batch Results</h3>
+                        <div id="batch-predictions"></div>
+                    </div>
+
+                    <div class="error" id="batch-error"></div>
+                </div>
+            </div>
+
+            <!-- Information Section -->
+            <div class="card">
+                <h2>ℹ️ Information</h2>
+
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchInfoTab('crops')">Crops (22)</button>
+                    <button class="tab-button" onclick="switchInfoTab('features')">Features (7)</button>
+                </div>
+
+                <!-- Crops List -->
+                <div id="crops" class="tab-content active">
+                    <div class="info-box">
+                        🌾 All supported crop types in the system
+                    </div>
+                    <div class="crops-list" id="crops-list">
+                        Loading...
+                    </div>
+                </div>
+
+                <!-- Features List -->
+                <div id="features" class="tab-content">
+                    <div class="info-box">
+                        📊 Required input parameters for predictions
+                    </div>
+                    <div class="features-list" id="features-list">
+                        Loading...
+                    </div>
+                </div>
+
+                <!-- API Status -->
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">🔌 API Endpoints</h3>
+                    <div style="font-size: 0.9em; color: #666; line-height: 1.8;">
+                        <div><strong>GET</strong> /health - System status</div>
+                        <div><strong>GET</strong> /crops - Available crops</div>
+                        <div><strong>GET</strong> /features - Input features</div>
+                        <div><strong>POST</strong> /predict - Single prediction</div>
+                        <div><strong>POST</strong> /predict-batch - Batch predictions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>🌾 Crop Recommendation System v1.0 | Powered by Machine Learning</p>
+            <p>© 2026 Agricultural AI Solutions</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSystemHealth();
+            loadCrops();
+            loadFeatures();
+        });
+
+        // System Health Check
+        async function checkSystemHealth() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                const statusText = document.getElementById('status-text');
+                const statusBadge = document.getElementById('status-badge');
+                
+                if (data.model_loaded && data.status === 'healthy') {
+                    statusText.textContent = '✓ All systems operational';
+                    statusBadge.textContent = 'HEALTHY';
+                    statusBadge.classList.add('healthy');
+                } else {
+                    statusText.textContent = '⚠ System degraded';
+                    statusBadge.textContent = 'WARNING';
+                    statusBadge.classList.add('error');
+                }
+            } catch (error) {
+                document.getElementById('status-text').textContent = '✗ Cannot connect to API';
+                document.getElementById('status-badge').textContent = 'OFFLINE';
+                document.getElementById('status-badge').classList.add('error');
+            }
+        }
+
+        // Load Crops
+        async function loadCrops() {
+            try {
+                const response = await fetch(`${API_URL}/crops`);
+                const data = await response.json();
+                
+                const cropsList = document.getElementById('crops-list');
+                cropsList.innerHTML = '';
+                
+                Object.keys(data.crops).forEach((crop, index) => {
+                    const cropItem = document.createElement('div');
+                    cropItem.className = 'crop-item';
+                    cropItem.textContent = `${index + 1}. ${crop.charAt(0).toUpperCase() + crop.slice(1)}`;
+                    cropsList.appendChild(cropItem);
+                });
+            } catch (error) {
+                document.getElementById('crops-list').innerHTML = '<p style="color: red;">Failed to load crops</p>';
+            }
+        }
+
+        // Load Features
+        async function loadFeatures() {
+            try {
+                const response = await fetch(`${API_URL}/features`);
+                const data = await response.json();
+                
+                const featuresList = document.getElementById('features-list');
+                featuresList.innerHTML = '';
+                
+                const featureDescriptions = {
+                    'N': 'Nitrogen (kg/ha)',
+                    'P': 'Phosphorus (kg/ha)',
+                    'K': 'Potassium (kg/ha)',
+                    'temperature': 'Temperature (°C)',
+                    'humidity': 'Humidity (%)',
+                    'ph': 'pH Level',
+                    'rainfall': 'Rainfall (mm)'
+                };
+                
+                data.features.forEach((feature, index) => {
+                    const featureItem = document.createElement('div');
+                    featureItem.className = 'feature-item';
+                    featureItem.textContent = `${index + 1}. ${featureDescriptions[feature] || feature}`;
+                    featuresList.appendChild(featureItem);
+                });
+            } catch (error) {
+                document.getElementById('features-list').innerHTML = '<p style="color: red;">Failed to load features</p>';
+            }
+        }
+
+        // Make Single Prediction
+        async function makePrediction() {
+            const data = {
+                N: parseFloat(document.getElementById('n_input').value),
+                P: parseFloat(document.getElementById('p_input').value),
+                K: parseFloat(document.getElementById('k_input').value),
+                temperature: parseFloat(document.getElementById('temp_input').value),
+                humidity: parseFloat(document.getElementById('humidity_input').value),
+                ph: parseFloat(document.getElementById('ph_input').value),
+                rainfall: parseFloat(document.getElementById('rainfall_input').value)
+            };
+
+            if (Object.values(data).some(v => isNaN(v))) {
+                showError('Please fill in all fields with valid numbers');
+                return;
+            }
+
+            showLoading(true);
+            hideResult();
+            hideError();
+
+            try {
+                const response = await fetch(`${API_URL}/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayResult(result.prediction);
+                } else {
+                    showError(result.error || 'Prediction failed');
+                }
+            } catch (error) {
+                showError('Cannot connect to API. Is the server running?');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Make Batch Prediction
+        async function makeBatchPrediction() {
+            try {
+                const batchInput = document.getElementById('batch_input').value;
+                const predictions = JSON.parse(batchInput);
+
+                if (!Array.isArray(predictions) || predictions.length === 0) {
+                    showBatchError('Please provide a valid JSON array');
+                    return;
+                }
+
+                showBatchLoading(true);
+                hideBatchResult();
+                hideBatchError();
+
+                const response = await fetch(`${API_URL}/predict-batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: predictions })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayBatchResults(result.predictions);
+                } else {
+                    showBatchError(result.error || 'Batch prediction failed');
+                }
+            } catch (error) {
+                showBatchError('Invalid JSON format or API error');
+            } finally {
+                showBatchLoading(false);
+            }
+        }
+
+        // Display Single Result
+        function displayResult(prediction) {
+            document.getElementById('crop-result').textContent = 
+                prediction.crop.charAt(0).toUpperCase() + prediction.crop.slice(1);
+            
+            const confidence = prediction.confidence;
+            document.getElementById('confidence-text').textContent = `${confidence.toFixed(1)}%`;
+            document.getElementById('confidence-bar').style.width = `${confidence}%`;
+            
+            showResult();
+        }
+
+        // Display Batch Results
+        function displayBatchResults(predictions) {
+            const container = document.getElementById('batch-predictions');
+            container.innerHTML = '';
+
+            predictions.forEach((pred, index) => {
+                const div = document.createElement('div');
+                div.className = 'prediction-box';
+                div.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>Prediction ${index + 1}:</strong> 
+                        <span style="font-size: 1.1em;">${pred.crop.toUpperCase()}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span>Confidence:</span>
+                        <span>${pred.confidence.toFixed(1)}%</span>
+                        <div class="confidence-bar" style="width: 150px;">
+                            <div class="confidence-fill" style="width: ${pred.confidence}%; background: #4ade80;"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            showBatchResult();
+        }
+
+        // UI Helpers
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function switchInfoTab(tab) {
+            const tabs = document.querySelectorAll('#crops, #features');
+            const buttons = document.querySelectorAll('[onclick*="switchInfoTab"]');
+            
+            tabs.forEach(el => el.classList.remove('active'));
+            buttons.forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+        }
+
+        function showBatchLoading(show) {
+            document.getElementById('batch-loading').classList.toggle('show', show);
+        }
+
+        function showResult() {
+            document.getElementById('result').classList.add('show');
+        }
+
+        function hideResult() {
+            document.getElementById('result').classList.remove('show');
+        }
+
+        function showBatchResult() {
+            document.getElementById('batch-result').classList.add('show');
+        }
+
+        function hideBatchResult() {
+            document.getElementById('batch-result').classList.remove('show');
+        }
+
+        function showError(msg) {
+            const error = document.getElementById('error');
+            error.textContent = msg;
+            error.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.remove('show');
+        }
+
+        function showBatchError(msg) {
+            const error = document.getElementById('batch-error');
+            error.textContent = msg;
+            error.classList.add('show');
+        }
+
+        function hideBatchError() {
+            document.getElementById('batch-error').classList.remove('show');
+        }
+
+        // Example Data
+        function loadExampleData() {
+            document.getElementById('n_input').value = 90;
+            document.getElementById('p_input').value = 42;
+            document.getElementById('k_input').value = 43;
+            document.getElementById('temp_input').value = 20.88;
+            document.getElementById('humidity_input').value = 82;
+            document.getElementById('ph_input').value = 6.5;
+            document.getElementById('rainfall_input').value = 202.94;
+        }
+
+        function loadBatchExample() {
+            document.getElementById('batch_input').value = JSON.stringify([
+                { N: 90, P: 42, K: 43, temperature: 20.88, humidity: 82, ph: 6.5, rainfall: 202.94 },
+                { N: 120, P: 70, K: 50, temperature: 28, humidity: 65, ph: 6.5, rainfall: 200 },
+                { N: 100, P: 60, K: 40, temperature: 20, humidity: 50, ph: 6.5, rainfall: 90 }
+            ], null, 2);
+        }
+    </script>
+</body>
+</html>
